@@ -48,7 +48,14 @@ module IJE
         record = self.new
         @ranges.each do |name, range|
           # TODO make this faster with Array#unpack
-          record.send("#{name}=", line.slice(range).strip)
+          # Take into account cases where the length of the line is smaller than the expressed range.
+          if range.first <= line.length - 1
+            if range.last <= line.length - 1
+              record.send("#{name}=", line.slice(range).strip)
+            else
+              record.send("#{name}=", line.slice(range.first .. -1).strip)
+            end
+          end
         end
         yield record
       end
