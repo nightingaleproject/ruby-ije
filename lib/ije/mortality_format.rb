@@ -254,6 +254,7 @@ module IJE
     range 4376..4425, :marital_descriptor
     range 4426..4428, :hispanic_code_for_literal
     range 4429..4728, :blank_for_future_expansion
+    range 4729..4999, :blank_for_jurisdictional_use_only
   end
 
 end
