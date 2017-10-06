@@ -1,15 +1,11 @@
 require_relative 'fixed_length_record_format'
 
-# TODO: probably need a formatting specification, ie left 0 filled, etc
-# TODO: might want a type specification, ie integer, boolean
-# TODO: might want to include validators for legal ranges/values
-
 module IJE
 
   class MortalityFormat < IJE::FixedLengthRecordFormat
-    range 0..3,     :date_of_death_year
-    range 4..5,     :state_territory_province_code
-    range 6..11,    :certificate_number
+    range 0..3,     :date_of_death_year,                 type: :year
+    range 4..5,     :state_territory_province_code,      type: :state
+    range 6..11,    :certificate_number,                 type: :rjust_zeroes
     range 12..12,   :void_flag
     range 13..24,   :auxiliary_state_file_number
     range 25..25,   :source_flag
@@ -21,7 +17,7 @@ module IJE
     range 138..187, :father_surname
     range 188..188, :sex
     range 189..189, :sex_edit_flag
-    range 190..198, :social_security_number
+    range 190..198, :social_security_number,             type: :ssn
     range 199..199, :decedents_age_type
     range 200..202, :decedents_age_units
     range 203..203, :decedents_age_edit_flag
@@ -255,6 +251,41 @@ module IJE
     range 4426..4428, :hispanic_code_for_literal
     range 4429..4728, :blank_for_future_expansion
     range 4729..4999, :blank_for_jurisdictional_use_only
+
+    # Error exception and type support functions for mortality fields; each function validates and formats
+    # data of a particular type, as appropriate; each type can have a function for each direction (converting
+    # from fixed length format to record format and the reverse)
+
+    class MortalityFormatError < StandardError ; end
+
+    def year_input(field_name, field_value, field_length)
+      raise MortalityFormatError, "Non-numeric value provided for #{field_name}" unless field_value.to_s.match(/[0-9]{4}/)
+      raise MortalityFormatError, "Incorrect field length provided for #{field_name}" unless field_value.to_s.length == field_length
+      field_value
+    end
+
+    def state_input(field_name, field_value, field_length)
+      raise MortalityFormatError, "Non-letter value provided for #{field_name}" unless field_value.to_s.match(/[A-Z]{2}/)
+      field_value
+    end
+
+    def rjust_zeroes_input(field_name, field_value, field_length)
+      raise MortalityFormatError, "Non-numeric value provided for #{field_name}" unless field_value.to_s.match(/[0-9]+/)
+      raise MortalityFormatError, "Field length too large for #{field_name}" unless field_value.to_s.length <= field_length
+      "%0#{field_length}d" % field_value
+    end
+
+    def rjust_zeroes_output(field_name, field_value, field_length)
+      # Remove all zeroes from left
+      field_value.to_s.gsub(/^0+/, '')
+    end
+
+    def ssn_input(field_name, field_value, field_length)
+      raise MortalityFormatError, "Non-numeric value provided for #{field_name}" unless field_value.to_s.match(/[0-9]{9}/)
+      raise MortalityFormatError, "Field length incorrect for #{field_name}" unless field_value.to_s.length == field_length
+      field_value
+    end
+
   end
 
 end

@@ -6,7 +6,7 @@ class MortalityFormatTest < Minitest::Test
   def setup
     @record1 = IJE::MortalityFormat.new(date_of_death_year: 2010,
                                         state_territory_province_code: "NY",
-                                        certificate_number: "000021",
+                                        certificate_number: "21",
                                         void_flag: 0,
                                         source_flag: 0,
                                         decedant_legal_name_given: "Nobody123",
@@ -17,7 +17,7 @@ class MortalityFormatTest < Minitest::Test
 
     @record2 = IJE::MortalityFormat.new(date_of_death_year: 2011,
                                         state_territory_province_code: "NY",
-                                        certificate_number: "000022",
+                                        certificate_number: "22",
                                         void_flag: 0,
                                         source_flag: 0,
                                         decedant_legal_name_given: "Xyz123",
@@ -60,6 +60,15 @@ class MortalityFormatTest < Minitest::Test
     IJE::MortalityFormat.read(output1) { |record| records1 << record }
     output2 = IJE::MortalityFormat.write(records1)
     assert_equal(output1, output2)
+  end
+
+  def test_write_formatting_errors
+    assert_raises IJE::MortalityFormat::MortalityFormatError do
+      IJE::MortalityFormat.new(date_of_death_year: "not a year")
+    end
+    assert_raises IJE::MortalityFormat::MortalityFormatError do
+      IJE::MortalityFormat.new(date_of_death_year: "1999999999")
+    end
   end
 
 end
